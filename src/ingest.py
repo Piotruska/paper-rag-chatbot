@@ -1,13 +1,14 @@
 import fitz # PyMuPDF reader tool for PDF files
+import ollama
+import chromadb
 
+#opening PDF and extracting text
 pdf_path = "../data/papers/sample_paper.pdf"
 doc = fitz.open(pdf_path)
 text = ""
 
 for page in doc:
     text += page.get_text()
-
-print(text[:1000])
 
 #simple chunking
 chunk_size = 800
@@ -22,11 +23,26 @@ while start < len(text):
     chunks.append(chunk)
     start += chunk_size - overlap
 
-print(f"Total text length: {len(text)}")
-print(f"Number of chunks: {len(chunks)}")
+print(f"Created {len(chunks)} chunks")
 
-print("\nFirst chunk preview:\n")
-print(chunks[0])
+#create chroma database
+client = chromadb.Client()
+collection = client.create_collection("papers")
 
-print("\nSecond chunk preview:\n")
-print(chunks[1])
+# create embeddings and store them
+for i, chunk in enumerate(chunks):
+
+    # generate embedding for the chunk using Ollama "embeddinggemma" model
+    embedding = ollama.embeddings(
+        model="embeddinggemma",
+        prompt=chunk,
+    )["embedding"]
+
+    # add the embedding and chunk to the chroma collection
+    collection.add(
+        ids=[str(i)],
+        embeddings=[embedding],
+        documents=[chunk]
+    )
+print(f"{len(chunks)} Chunks stored as {collection.count()} vectors in database.")
+
