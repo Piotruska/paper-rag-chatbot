@@ -7,6 +7,9 @@ pdf_path = "../data/papers/sample_paper.pdf"
 doc = fitz.open(pdf_path)
 text = ""
 
+for page in doc:
+    text += page.get_text()
+
 #removes references section from the text to avoid including it in the chunks
 references_index = text.find("References")
 if references_index != -1:
