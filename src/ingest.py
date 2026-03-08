@@ -26,8 +26,8 @@ while start < len(text):
 print(f"Created {len(chunks)} chunks")
 
 #create chroma database
-client = chromadb.Client()
-collection = client.create_collection("papers")
+client = chromadb.PersistentClient(path="../db")
+collection = client.get_or_create_collection("papers")
 
 # create embeddings and store them
 for i, chunk in enumerate(chunks):
